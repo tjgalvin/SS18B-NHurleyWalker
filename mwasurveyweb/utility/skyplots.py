@@ -4,7 +4,7 @@ Distributed under the MIT License. See LICENSE.txt for more info.
 
 import os
 import itertools
-import sqlite3
+import mysql.connector as mysql
 import astropy.units as u
 import logging
 
@@ -41,7 +41,7 @@ def generate_sky_plot_by_colour(colour_set, cursor, is_default=False):
     """
 
     # query to retrieve ra and dec for observation
-    query = 'SELECT ra_pointing, dec_pointing FROM observation WHERE status = ?'
+    query = 'SELECT ra_pointing, dec_pointing FROM observation WHERE status = %s'
 
     # figure/plot configuration
     plt.figure(figsize=(16, 8.4))
@@ -57,9 +57,10 @@ def generate_sky_plot_by_colour(colour_set, cursor, is_default=False):
         status_list = SkyPlotsConfiguration.objects.filter(colour=colour).values('observation_status')
 
         for status in status_list:
-
             # finding the observations' information for the status
-            results = cursor.execute(query, [status.get('observation_status')]).fetchall()
+            cursor.execute(query, [status.get('observation_status')])
+            
+            results = cursor.fetchall()
             ra = []
             dec = []
 
@@ -96,6 +97,7 @@ def generate_sky_plot_by_colour(colour_set, cursor, is_default=False):
         'static/images/skyplots/',
         '{}.png'.format(image_name),
     )
+    print(file_path)
 
     # save the image in the physical location
     plt.savefig(file_path)
@@ -122,11 +124,14 @@ def generate_sky_plots():
     # connect to gleam-x database
     try:
 
-        conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+        conn = mysql.connect(**settings.GLEAM_DATABASE)
+
+        print(settings.GLEAM_DATABASE)
+        print(conn)
 
         cursor = conn.cursor()
 
-    except sqlite3.Error as ex:
+    except mysql.Error as ex:
         print('Could not generate plots due to SQLite error : ' + ex.__str__())
         logger.info('Could not generate plots due to SQLite error : ' + ex.__str__())
     else:
@@ -141,7 +146,7 @@ def generate_sky_plots():
 
         try:
             conn.close()
-        except sqlite3.Error:
+        except mysql.Error:
             pass
 
     # clean up the image files

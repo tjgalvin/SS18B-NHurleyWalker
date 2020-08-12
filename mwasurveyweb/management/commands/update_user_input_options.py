@@ -2,7 +2,7 @@
 Distributed under the MIT License. See LICENSE.txt for more info.
 """
 
-import sqlite3
+import mysql.connector as mysql
 import os
 
 from django.conf import settings
@@ -33,13 +33,15 @@ class Command(BaseCommand):
 
         try:
 
-            conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+            conn = mysql.connect(**settings.GLEAM_DATABASE)
 
             cursor = conn.cursor()
 
             query = 'SELECT DISTINCT user FROM processing'
 
-            results = cursor.execute(query).fetchall()
+            cursor.execute(query)
+            
+            results = cursor.fetchall()
 
             for result in results:
                 # inserting in the input options info, parameters are:
@@ -49,7 +51,7 @@ class Command(BaseCommand):
                 # 4. display name
                 search_input_options_info.append(('processing_processing_info', 'user', result[0], result[0]))
 
-        except sqlite3.Error as e:
+        except mysql.Error as e:
             print('{} in {}'.format(e, os.path.normpath(settings.GLEAM_DATABASE_PATH)))
 
         else:
@@ -83,5 +85,5 @@ class Command(BaseCommand):
 
             try:
                 conn.close()
-            except sqlite3.Error:
+            except mysql.Error:
                 pass

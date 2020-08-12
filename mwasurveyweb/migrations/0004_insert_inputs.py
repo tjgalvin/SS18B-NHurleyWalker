@@ -1,8 +1,7 @@
 """
 Distributed under the MIT License. See LICENSE.txt for more info.
 """
-
-import sqlite3
+import mysql.connector as mysql
 import os
 
 from django.conf import settings
@@ -415,20 +414,20 @@ def insert(apps, schema_editor):
     search_input_options_info = []
 
     try:
-
-        conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+        conn = mysql.connect(**settings.GLEAM_DATABASE)
 
         cursor = conn.cursor()
 
         query = 'SELECT DISTINCT user FROM processing'
 
-        results = cursor.execute(query).fetchall()
+        cursor.execute(query)
+        results = cursor.fetchall()
 
         for result in results:
             search_input_options_info.append(('processing_processing_info', 'user', result[0], result[0]))
 
-    except sqlite3.Error as e:
-        print('\n{} in {}'.format(e, os.path.normpath(settings.GLEAM_DATABASE_PATH)))
+    except mysql.Error as e:
+        print('\n{}'.format(e))
 
     else:
 
@@ -459,7 +458,7 @@ def insert(apps, schema_editor):
 
         try:
             conn.close()
-        except sqlite3.Error:
+        except mysql.Error:
             pass
 
 

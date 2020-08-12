@@ -16,17 +16,18 @@ EMAIL_FROM = 'ssaleheen@swin.edu.au'
 EMAIL_HOST = 'mail.swin.edu.au'
 EMAIL_PORT = 25
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'mwasurvey',
-#         'USER': 'root',
-#         'PASSWORD': 'your password',
-#     },
-# }
-#
-# for logger in LOGGING['loggers']:
-#     LOGGING['loggers'][logger]['handlers'] = ['console', 'file']
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mwasurvey',
+        'USER': 'mwasurvey',
+        'PASSWORD': 'gleam123',
+        # 'PASSWORD': 'your password',
+    },
+}
+
+for logger in LOGGING['loggers']:
+    LOGGING['loggers'][logger]['handlers'] = ['console', 'file']
 
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 

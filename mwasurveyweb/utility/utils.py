@@ -2,7 +2,7 @@
 Distributed under the MIT License. See LICENSE.txt for more info.
 """
 
-import sqlite3
+import mysql.connector as mysql
 import pytz
 
 from django.conf import settings
@@ -15,7 +15,7 @@ from .. import constants
 
 def dict_factory(cursor, row):
     """
-    Factory function to convert a sqlite3 result row in a dictionary
+    Factory function to convert a mysql result row in a dictionary
     :param cursor: cursor object
     :param row: a row object
     :return: dictionary representation of the row object
@@ -244,22 +244,23 @@ def get_search_results(query, query_values):
     """
     try:
 
-        conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+        conn = mysql.connect(**settings.GLEAM_DATABASE)
 
         cursor = conn.cursor()
 
         # to handle subquery for total object count, values need to be duplicated in order
         values = query_values + query_values
+        cursor.execute(query, values)
 
-        results = cursor.execute(query, values).fetchall(),
+        results = cursor.fetchall(),
 
-    except sqlite3.Error:
+    except mysql.Error:
         return [[]]
     else:
 
         try:
             conn.close()
-        except sqlite3.Error:
+        except mysql.Error:
             pass
 
         return results

@@ -2,7 +2,7 @@
 Distributed under the MIT License. See LICENSE.txt for more info.
 """
 
-import sqlite3
+import mysql.connector as mysql
 from datetime import datetime
 
 import pytz
@@ -27,13 +27,13 @@ class Processing(object):
 
         # creating the connection and cursor
         try:
-            self.conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+            self.conn = mysql.connect(**settings.GLEAM_DATABASE)
 
             self.conn.row_factory = dict_factory
 
             self.cursor = self.conn.cursor()
 
-        except sqlite3.Error:
+        except mysql.Error:
             self.health_okay = False
 
         # collecting information about processing attributes
@@ -45,7 +45,7 @@ class Processing(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             self.conn.close()
-        except sqlite3.Error:
+        except mysql.Error:
             pass
 
     def _populate_processing_info(self):
@@ -58,6 +58,7 @@ class Processing(object):
         query = 'SELECT ' \
                 '{0}.job_id, ' \
                 '{0}.submission_time, ' \
+                '{0}.host_cluster, ' \
                 '{0}.start_time, ' \
                 '{0}.end_time, ' \
                 '{0}.task_id, ' \
@@ -69,11 +70,12 @@ class Processing(object):
                 '{0}.stdout, ' \
                 '{0}.output_files, ' \
                 '{0}.status ' \
-                ' FROM {0} WHERE job_id = ?'.format('processing')
+                ' FROM {0} WHERE job_id = %s'.format('processing')
 
         values = [self.processing_id]
+        self.cursor.execute(query, values)
 
-        result = dict(self.cursor.execute(query, values).fetchone())
+        result = dict(self.cursor.fetchone())
 
         utc_tz = pytz.timezone('UTC')
         perth_tz = pytz.timezone('Australia/Perth')

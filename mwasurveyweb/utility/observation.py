@@ -3,7 +3,7 @@ Distributed under the MIT License. See LICENSE.txt for more info.
 """
 
 import os
-import sqlite3
+import mysql.connector as mysql
 from datetime import datetime
 
 import pytz
@@ -32,15 +32,15 @@ class Observation(object):
 
         # creating the connection and cursor
         try:
-            self.conn = sqlite3.connect(settings.GLEAM_DATABASE_PATH)
+            self.conn = mysql.connect(**settings.GLEAM_DATABASE)
 
             self.conn.row_factory = dict_factory
 
             self.cursor = self.conn.cursor()
 
-        except sqlite3.Error:
+        except mysql.Error:
             self.health_okay = False
-
+            
         # collecting information in groups for an observation.
         self.attributes, self.histogram_attributes = self._populate_observation_info()
         self.processing_objects = self._populate_processing_objects()
@@ -53,7 +53,7 @@ class Observation(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             self.conn.close()
-        except sqlite3.Error:
+        except mysql.Error:
             pass
 
     def _populate_observation_info(self):
@@ -84,11 +84,13 @@ class Observation(object):
                 'CASE WHEN {0}.archived = 0 THEN \'False\' ELSE \'True\' END archived, ' \
                 'obs_id "UTC date-obs", ' \
                 '{0}.status ' \
-                ' FROM {0} WHERE obs_id = ?'.format('observation')
+                ' FROM {0} WHERE obs_id = %s'.format('observation')
 
         values = [self.observation_id]
-
-        result = dict(self.cursor.execute(query, values).fetchone())
+        
+        self.cursor.execute(query, values)
+        result = dict(self.cursor.fetchone())
+        # TODO: Does the cursor have to be flushed here as a just in case?
 
         # separating the histogram attributes as they are to be displayed near the histogram.
         histogram_attributes = dict(
@@ -121,11 +123,12 @@ class Observation(object):
                 '{0}.status, ' \
                 '{0}.stderr, ' \
                 '{0}.stdout ' \
-                ' FROM {0} WHERE obs_id = ? ORDER BY start_time DESC'.format('processing')
+                ' FROM {0} WHERE obs_id = %s ORDER BY start_time DESC'.format('processing')
 
         values = [self.observation_id]
 
-        results = self.cursor.execute(query, values).fetchall()
+        self.cursor.execute(query, values)
+        results = self.cursor.fetchall()
 
         processing_objects = []
 

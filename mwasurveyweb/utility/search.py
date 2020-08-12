@@ -50,14 +50,14 @@ class SearchQuery(object):
         # later during execution the ? will be replaced by the values by the cursor
         for db_search_parameter in self.database_search_parameters:
             if db_search_parameter.get('field_operator', None):
-                temp_query_part = '({field_operator}({table}.{field}) {operator} ?)'.format(
+                temp_query_part = '({field_operator}({table}.{field}) {operator} %s)'.format(
                     field_operator=db_search_parameter.get('field_operator'),
                     table=db_search_parameter.get('table'),
                     field=db_search_parameter.get('field'),
                     operator=db_search_parameter.get('operator'),
                 )
             else:
-                temp_query_part = '({table}.{field} {operator} ?)'.format(
+                temp_query_part = '({table}.{field} {operator} %s)'.format(
                     table=db_search_parameter.get('table'),
                     field=db_search_parameter.get('field'),
                     operator=db_search_parameter.get('operator'),

@@ -291,6 +291,9 @@ def search(request):
             search_forms = None
             search_results = list(get_search_results(query, query_values))[0]
 
+            print(query)
+            print('Tim')
+            
             try:
                 total = search_results[0][-1]
             except IndexError:
