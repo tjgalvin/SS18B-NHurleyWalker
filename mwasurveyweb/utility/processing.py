@@ -72,10 +72,11 @@ class Processing(object):
                 '{0}.status ' \
                 ' FROM {0} WHERE job_id = %s'.format('processing')
 
-        values = [self.processing_id]
+        values = (self.processing_id, )
         self.cursor.execute(query, values)
 
-        result = dict(self.cursor.fetchone())
+        result = self.cursor.fetchone()
+        result = self.conn.row_factory(self.cursor, result)
 
         utc_tz = pytz.timezone('UTC')
         perth_tz = pytz.timezone('Australia/Perth')

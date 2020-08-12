@@ -30,6 +30,8 @@ class Observation(object):
         self.observation_id = observation_id
         self.processing_objects = []
 
+        print(observation_id)
+
         # creating the connection and cursor
         try:
             self.conn = mysql.connect(**settings.GLEAM_DATABASE)
@@ -64,10 +66,13 @@ class Observation(object):
 
         # query to collect observation attributes. Ordered in a way so that two column can have the required format.
         # For example: ra_pointing, dec_pointing are in the same column.
+        # 'cenchan || " (" || CAST(1.28 * {0}.cenchan AS INT) || " MHz)" cenchan, ' \
+        # 'CONCAT(" (", CAST({0}.cenchan AS INT), " MHz)") AS cenchan, ' \
+
         query = 'SELECT ' \
                 '{0}.obsname, ' \
-                'cenchan || " (" || CAST(1.28 * {0}.cenchan AS INT) || " MHz)" cenchan, ' \
                 '{0}.ra_pointing, ' \
+                '{0}.cenchan, ' \
                 '{0}.delays, ' \
                 '{0}.dec_pointing, ' \
                 'CASE WHEN {0}.calibration = 0 THEN \'False\' ELSE \'True\' END calibration, ' \
@@ -86,11 +91,12 @@ class Observation(object):
                 '{0}.status ' \
                 ' FROM {0} WHERE obs_id = %s'.format('observation')
 
-        values = [self.observation_id]
+        values = (self.observation_id, )
         
         self.cursor.execute(query, values)
-        result = dict(self.cursor.fetchone())
-        # TODO: Does the cursor have to be flushed here as a just in case?
+
+        result = self.cursor.fetchone()
+        result = self.conn.row_factory(self.cursor, result)
 
         # separating the histogram attributes as they are to be displayed near the histogram.
         histogram_attributes = dict(
@@ -125,7 +131,7 @@ class Observation(object):
                 '{0}.stdout ' \
                 ' FROM {0} WHERE obs_id = %s ORDER BY start_time DESC'.format('processing')
 
-        values = [self.observation_id]
+        values = (self.observation_id, )
 
         self.cursor.execute(query, values)
         results = self.cursor.fetchall()
@@ -136,9 +142,10 @@ class Observation(object):
         perth_tz = pytz.timezone('Australia/Perth')
 
         for result in results:
-            processing_dict = dict(result)
+            processing_dict = self.conn.row_factory(self.cursor, result)
 
-            unix_time = result.get('submission_time')
+            # unix_time = result.get('submission_time')
+            unix_time = processing_dict.get('submission_time')
             if unix_time:
                 utc_time = utc_tz.localize(datetime.fromtimestamp(unix_time))
                 awst_time = utc_time.astimezone(perth_tz)
@@ -146,7 +153,8 @@ class Observation(object):
                     'submission_time': awst_time.strftime('%d/%m/%Y %H:%M:%S (%Z)'),
                 })
 
-            unix_time = result.get('start_time')
+            # unix_time = result.get('start_time')
+            unix_time = processing_dict.get('start_time')
             if unix_time:
                 utc_time = utc_tz.localize(datetime.fromtimestamp(unix_time))
                 awst_time = utc_time.astimezone(perth_tz)
