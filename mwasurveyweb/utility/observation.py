@@ -72,7 +72,7 @@ class Observation(object):
         query = 'SELECT ' \
                 '{0}.obsname, ' \
                 '{0}.ra_pointing, ' \
-                '{0}.cenchan, ' \
+                'CONCAT(CAST(1.28 * {0}.cenchan AS SIGNED), " MHz") cenchan, ' \
                 '{0}.delays, ' \
                 '{0}.dec_pointing, ' \
                 'CASE WHEN {0}.calibration = 0 THEN \'False\' ELSE \'True\' END calibration, ' \
