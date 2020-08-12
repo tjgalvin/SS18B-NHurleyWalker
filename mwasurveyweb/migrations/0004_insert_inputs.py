@@ -253,6 +253,10 @@ def insert(apps, schema_editor):
         initial_search_input_info = [
             ('job_id', 'Job ID', 'processing', 'job_id', SInput.INT, constants.NUMBER, None, None, False, ''),
             ('task', 'Task', 'processing', 'task', SInput.TEXT, constants.SELECT, None, None, False, ''),
+            # TODO: TG to figure out the injection of host cluster information. Looks like it should be teh 
+            # TODO: same as the user information, which has its own command to insert things into the django
+            # TODO: admin management database. 
+            # ('host_cluster', 'Host Cluster', 'processing', 'host_cluster', SInput.TEXT, constants.SELECT, None, None, False, ''),
             ('user', 'User', 'processing', 'user', SInput.TEXT, constants.SELECT, None, None, False, ''),
             ('status', 'Status', 'processing', 'status', SInput.TEXT, constants.SELECT, None, None, False, ''),
         ]
