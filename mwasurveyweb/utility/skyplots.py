@@ -61,16 +61,11 @@ def generate_sky_plot_by_colour(colour_set, cursor, is_default=False):
             cursor.execute(query, [status.get('observation_status')])
             
             results = cursor.fetchall()
-            ra = []
-            dec = []
-
-            # creating list of ra and dec
-            for row in results:
-                ra.append(row[0])
-                dec.append(row[1])
-
+            ra = [row[0] for row in results]
+            dec = [row[1] for row in results]
+            
             # continue to the next status if there are no observations found for the current status
-            if not len(ra):
+            if len(ra) == 0:
                 continue
 
             # Otherwise, change to sky-coordinates and find ra and dec in radian
@@ -126,14 +121,11 @@ def generate_sky_plots():
 
         conn = mysql.connect(**settings.GLEAM_DATABASE)
 
-        print(settings.GLEAM_DATABASE)
-        print(conn)
-
         cursor = conn.cursor()
 
     except mysql.Error as ex:
-        print('Could not generate plots due to SQLite error : ' + ex.__str__())
-        logger.info('Could not generate plots due to SQLite error : ' + ex.__str__())
+        print('Could not generate plots due to mySQL error : ' + ex.__str__())
+        logger.info('Could not generate plots due to mySQL error : ' + ex.__str__())
     else:
 
         # find out the colours, in order, so that names would be consistent
